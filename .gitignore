@@ -1,0 +1,6 @@
+nettools.db
+nettools.db-*
+nettools.token
+*.exe
+nettools-linux
+internal/oui/manuf

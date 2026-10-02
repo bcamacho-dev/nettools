@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>NetTools</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">Servidor de exames</p>
+      <h1>NetTools</h1>
+    </div>
+    <div id="net" class="net"></div>
+  </header>
+
+  <section id="login" class="panel">
+    <h2>Entrar</h2>
+    <p class="muted">O token foi impresso na primeira execução e gravado em <span class="mono">nettools.token</span>, ao lado do banco.</p>
+    <form id="login-form">
+      <label for="token">Token</label>
+      <input id="token" type="password" autocomplete="current-password" required>
+      <button type="submit">Abrir</button>
+    </form>
+    <p id="login-error" class="error" hidden></p>
+  </section>
+
+  <main id="app" hidden>
+    <section class="actions">
+      <button id="scan-btn" type="button" data-exam>Examinar a rede</button>
+      <button id="dhcp-btn" type="button" class="ghost" data-exam>Só DHCP</button>
+      <button id="stab-btn" type="button" class="ghost" data-exam>Estabilidade</button>
+      <button id="speed-btn" type="button" class="ghost">Velocidade até aqui</button>
+    </section>
+    <p id="status" class="status" role="status"></p>
+    <p id="hint" class="muted"></p>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Esta máquina na LAN</h2>
+        <button id="lan-btn" type="button" class="ghost" data-exam>Atualizar</button>
+      </div>
+      <div id="lan-banner" class="banner" hidden></div>
+      <div id="lan-facts" class="facts"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Caixa de ferramentas</h2>
+      <p class="muted">Portas, caminho dentro da rede e despertar ficam nesta LAN. DNS e estabilidade aceitam um nome qualquer. A saída mede o caminho até 1.1.1.1.</p>
+      <div class="tools">
+        <div class="field">
+          <label for="tool-host">Alvo</label>
+          <input id="tool-host" placeholder="IP ou nome; vazio no caminho usa o gateway">
+        </div>
+        <div class="field narrow">
+          <label for="tool-port">Porta</label>
+          <input id="tool-port" inputmode="numeric" placeholder="vazio = comuns">
+        </div>
+        <div class="field">
+          <label for="tool-mac">MAC</label>
+          <input id="tool-mac" placeholder="aa:bb:cc:dd:ee:ff" spellcheck="false">
+        </div>
+      </div>
+      <div class="actions tight">
+        <button id="dns-btn" type="button" class="ghost" data-exam>Consultar DNS</button>
+        <button id="reach-btn" type="button" class="ghost" data-exam>Testar portas</button>
+        <button id="path-btn" type="button" class="ghost" data-exam>Caminho na LAN</button>
+        <button id="exit-btn" type="button" class="ghost" data-exam>Saída da rede</button>
+        <button id="svc-btn" type="button" class="ghost" data-exam>Serviços anunciados</button>
+        <button id="arp-btn" type="button" class="ghost" data-exam>Vizinhos</button>
+        <button id="wol-btn" type="button" class="ghost" data-exam>Acordar</button>
+      </div>
+      <p id="tool-status" class="status" role="status"></p>
+      <div id="tool-banner" class="banner" hidden></div>
+      <div id="tool-result"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Velocidade até este servidor</h2>
+      <div class="stats">
+        <div><span id="down" class="figure">—</span><span class="caption">descida Mb/s</span></div>
+        <div><span id="up" class="figure">—</span><span class="caption">subida Mb/s</span></div>
+        <div><span id="rtt" class="figure">—</span><span class="caption">latência HTTP ms</span></div>
+      </div>
+      <p class="muted">O navegador transfere dados direto com esta máquina. É o caminho deste aparelho até o servidor, não a velocidade da internet.</p>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2 id="devices-title">Dispositivos</h2>
+        <span id="scan-when" class="muted"></span>
+      </div>
+      <div id="scan-error" class="banner" hidden></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>IP</th><th>MAC</th><th>Fabricante</th><th>Nome</th><th>Portas</th><th>Papel</th></tr>
+          </thead>
+          <tbody id="devices"></tbody>
+        </table>
+      </div>
+      <p id="devices-empty" class="muted">Nenhum exame ainda.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Servidores DHCP</h2>
+      <div id="dhcp-banner" class="banner" hidden></div>
+      <p id="dhcp-error" class="error" hidden></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Servidor</th><th>Origem</th><th>MAC</th><th>Oferecido</th><th>Máscara</th><th>DNS</th><th>Nome</th></tr>
+          </thead>
+          <tbody id="dhcp"></tbody>
+        </table>
+      </div>
+      <p id="dhcp-empty" class="muted">Nenhum exame de DHCP ainda.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Estabilidade até o gateway</h2>
+      <div class="stats" id="stab">
+        <div><span id="loss" class="figure">—</span><span class="caption">perda %</span></div>
+        <div><span id="avg" class="figure">—</span><span class="caption">média ms</span></div>
+        <div><span id="jitter" class="figure">—</span><span class="caption">jitter ms</span></div>
+      </div>
+      <p id="stab-detail" class="muted"></p>
+      <p class="muted">Se o campo Alvo da caixa estiver preenchido, a medição usa esse endereço. Vazio, mede o gateway.</p>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
