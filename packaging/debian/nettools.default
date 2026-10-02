@@ -1,0 +1,9 @@
+# Opções do serviço nettools.
+# LISTEN é o endereço HTTP. DB é o SQLite. O token é criado ao lado do banco
+# em /var/lib/nettools/nettools.token na primeira execução.
+LISTEN=:8080
+DB=/var/lib/nettools/nettools.db
+
+# Interface e bloco IPv4 opcionais. Vazios usam a rota padrão.
+IFACE=
+CIDR=

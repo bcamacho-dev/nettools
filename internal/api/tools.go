@@ -7,6 +7,15 @@ import (
 	"nettools/internal/model"
 )
 
+func (s *Server) networkMap(w http.ResponseWriter, r *http.Request) {
+	diagram, err := s.engine.Map()
+	if err != nil {
+		s.fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, diagram)
+}
+
 func (s *Server) lan(w http.ResponseWriter, r *http.Request) {
 	lan, err := s.engine.LAN()
 	if err != nil {

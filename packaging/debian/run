@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+LISTEN=:8080
+DB=/var/lib/nettools/nettools.db
+IFACE=
+CIDR=
+if [ -f /etc/default/nettools ]; then
+	# shellcheck disable=SC1091
+	. /etc/default/nettools
+fi
+set -- serve -listen "$LISTEN" -db "$DB"
+if [ -n "$IFACE" ]; then
+	set -- "$@" -iface "$IFACE"
+fi
+if [ -n "$CIDR" ]; then
+	set -- "$@" -cidr "$CIDR"
+fi
+exec /usr/bin/nettools "$@"

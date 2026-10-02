@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+if ! getent group nettools >/dev/null 2>&1; then
+	addgroup --system nettools
+fi
+if ! getent passwd nettools >/dev/null 2>&1; then
+	adduser --system --ingroup nettools --home /var/lib/nettools --no-create-home --gecos "NetTools" nettools
+fi
+install -d -o nettools -g nettools -m 0750 /var/lib/nettools
+if [ -d /run/systemd/system ]; then
+	systemctl daemon-reload
+	systemctl enable nettools.service
+	systemctl restart nettools.service
+fi
+exit 0

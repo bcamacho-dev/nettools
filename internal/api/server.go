@@ -50,6 +50,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/v1/speed", s.auth(s.saveSpeed))
 	mux.HandleFunc("GET /api/v1/speed/latest", s.auth(s.latestSpeed))
 	mux.HandleFunc("GET /api/v1/lan", s.auth(s.lan))
+	mux.HandleFunc("GET /api/v1/map", s.auth(s.networkMap))
 	mux.HandleFunc("GET /api/v1/neighbors", s.auth(s.neighbors))
 	mux.HandleFunc("POST /api/v1/tools/dns", s.auth(s.lookupDNS))
 	mux.HandleFunc("POST /api/v1/tools/reach", s.auth(s.reach))

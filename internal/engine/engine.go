@@ -12,6 +12,7 @@ import (
 	"nettools/internal/discover"
 	"nettools/internal/model"
 	"nettools/internal/netinfo"
+	"nettools/internal/netmap"
 	"nettools/internal/stability"
 	"nettools/internal/store"
 	"nettools/internal/toolbox"
@@ -156,6 +157,24 @@ func (e *Engine) LAN() (model.LAN, error) {
 		return model.LAN{}, err
 	}
 	return toolbox.Snapshot(info), nil
+}
+
+func (e *Engine) Map() (model.NetMap, error) {
+	net := model.Network{}
+	if info, err := netinfo.Detect(e.iface, e.cidr); err == nil {
+		net = info.View()
+	}
+	scan, err := e.store.Latest("discover")
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return netmap.Build(net, nil, nil), nil
+		}
+		return model.NetMap{}, err
+	}
+	if scan.Network.IP != "" {
+		net = scan.Network
+	}
+	return netmap.Build(net, scan.Devices, scan.DHCP), nil
 }
 
 func (e *Engine) Neighbors() ([]model.Neighbor, error) {

@@ -1,0 +1,21 @@
+[Unit]
+Description=NetTools exames de rede local
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nettools
+Group=nettools
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/nettools
+ExecStart=/usr/lib/nettools/run
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

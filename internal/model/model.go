@@ -178,3 +178,32 @@ type WakeResult struct {
 	MAC       string `json:"mac"`
 	Broadcast string `json:"broadcast,omitempty"`
 }
+
+type MapNode struct {
+	ID     string  `json:"id"`
+	Kind   string  `json:"kind"`
+	Label  string  `json:"label"`
+	Detail string  `json:"detail"`
+	Badge  string  `json:"badge,omitempty"`
+	IP     string  `json:"ip"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	W      float64 `json:"w"`
+	H      float64 `json:"h"`
+}
+
+type MapLine struct {
+	X1 float64 `json:"x1"`
+	Y1 float64 `json:"y1"`
+	X2 float64 `json:"x2"`
+	Y2 float64 `json:"y2"`
+}
+
+type NetMap struct {
+	Width  float64   `json:"width"`
+	Height float64   `json:"height"`
+	Subnet string    `json:"subnet,omitempty"`
+	Nodes  []MapNode `json:"nodes"`
+	Lines  []MapLine `json:"lines"`
+	Note   string    `json:"note"`
+}

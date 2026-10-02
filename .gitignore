@@ -3,4 +3,5 @@ nettools.db-*
 nettools.token
 *.exe
 nettools-linux
+dist/
 internal/oui/manuf

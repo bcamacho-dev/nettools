@@ -50,6 +50,7 @@ async function boot() {
   login.hidden = true;
   app.hidden = false;
   refreshLAN().catch(() => {});
+  loadMap().catch(() => {});
   const [scan, stab, speed] = await Promise.allSettled([
     api("/api/v1/scans/latest"),
     api("/api/v1/stability/latest"),
@@ -175,6 +176,102 @@ function renderScan(scan) {
   }
   renderDevices(scan.devices || []);
   renderDHCP(scan);
+  if (!scan.kind || scan.kind === "discover") loadMap().catch(() => {});
+}
+
+const mapKinds = {
+  gateway: ["#3a2c16", "#e0a24a", "Gateway"],
+  self: ["#243024", "#b7c48a", "Este servidor"],
+  printer: ["#2a241c", "#d4b483", "Impressora"],
+  computer: ["#1e2430", "#9eb0c9", "Computador"],
+  media: ["#2a2030", "#c9a0c0", "Mídia"],
+  other: ["#221f1a", "#8d8272", "Outro"],
+};
+
+async function loadMap() {
+  renderMap(await api("/api/v1/map"));
+}
+
+function renderMap(diagram) {
+  const wrap = document.querySelector("#map-wrap");
+  const empty = document.querySelector("#map-empty");
+  const note = document.querySelector("#map-note");
+  const legend = document.querySelector("#map-legend");
+  wrap.replaceChildren();
+  legend.replaceChildren();
+  const nodes = diagram.nodes || [];
+  note.textContent = [diagram.subnet, diagram.note].filter(Boolean).join(" · ");
+  empty.hidden = nodes.length > 0;
+  if (!nodes.length) return;
+
+  const seen = new Set();
+  for (const node of nodes) {
+    if (seen.has(node.kind) || !mapKinds[node.kind]) continue;
+    seen.add(node.kind);
+    const item = document.createElement("span");
+    const swatch = document.createElement("i");
+    swatch.className = "swatch";
+    swatch.style.background = mapKinds[node.kind][0];
+    swatch.style.borderColor = mapKinds[node.kind][1];
+    item.append(swatch, document.createTextNode(mapKinds[node.kind][2]));
+    legend.appendChild(item);
+  }
+
+  const svg = svgEl("svg", {
+    width: diagram.width,
+    height: diagram.height,
+    viewBox: "0 0 " + diagram.width + " " + diagram.height,
+    role: "img",
+  });
+  svg.setAttribute("aria-label", "Mapa da rede montado pelo servidor");
+  for (const line of diagram.lines || []) {
+    svg.appendChild(svgEl("line", {
+      x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2,
+      stroke: "#5c5346", "stroke-width": 1.5,
+    }));
+  }
+  for (const node of nodes) {
+    const colors = mapKinds[node.kind] || mapKinds.other;
+    const group = svgEl("g", { class: "map-node", tabindex: "0" });
+    group.style.cursor = "pointer";
+    group.appendChild(svgEl("rect", {
+      x: node.x, y: node.y, width: node.w, height: node.h, rx: 2,
+      fill: colors[0], stroke: colors[1], "stroke-width": 1.5,
+    }));
+    group.appendChild(svgText(node.label, node.x + 10, node.y + 20, "#f4f0e6", 13));
+    group.appendChild(svgText(node.detail, node.x + 10, node.y + 36, "#a89c88", 11));
+    const tip = svgEl("title");
+    tip.textContent = [node.label, node.ip, node.badge].filter(Boolean).join(" · ");
+    group.append(tip);
+    group.addEventListener("click", () => selectMapHost(node.ip));
+    group.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        selectMapHost(node.ip);
+      }
+    });
+    svg.appendChild(group);
+  }
+  wrap.appendChild(svg);
+}
+
+function selectMapHost(ip) {
+  const host = document.querySelector("#tool-host");
+  if (!host || !ip) return;
+  host.value = ip;
+  host.focus();
+}
+
+function svgEl(name, attrs = {}) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+  for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
+  return el;
+}
+
+function svgText(value, x, y, fill, size) {
+  const text = svgEl("text", { x, y, fill, "font-size": size });
+  text.textContent = value || "";
+  return text;
 }
 
 function renderDevices(devices) {
