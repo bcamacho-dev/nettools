@@ -7,7 +7,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -131,13 +133,26 @@ func tarGz(files []item) ([]byte, error) {
 		return nil, err
 	}
 	tw := tar.NewWriter(gz)
+	for _, name := range parentDirs(files) {
+		hdr := &tar.Header{
+			Name:     name + "/",
+			Mode:     0755,
+			Typeflag: tar.TypeDir,
+			ModTime:  time.Unix(0, 0),
+			Format:   tar.FormatGNU,
+		}
+		if err := tw.WriteHeader(hdr); err != nil {
+			return nil, err
+		}
+	}
 	for _, file := range files {
 		hdr := &tar.Header{
-			Name:    file.name,
-			Mode:    file.mode,
-			Size:    int64(len(file.body)),
-			ModTime: time.Unix(0, 0),
-			Format:  tar.FormatGNU,
+			Name:     file.name,
+			Mode:     file.mode,
+			Size:     int64(len(file.body)),
+			Typeflag: tar.TypeReg,
+			ModTime:  time.Unix(0, 0),
+			Format:   tar.FormatGNU,
 		}
 		if err := tw.WriteHeader(hdr); err != nil {
 			return nil, err
@@ -153,6 +168,23 @@ func tarGz(files []item) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+func parentDirs(files []item) []string {
+	seen := map[string]struct{}{}
+	for _, file := range files {
+		name := path.Dir(strings.TrimSuffix(file.name, "/"))
+		for name != "." && name != "/" && name != "" {
+			seen[name] = struct{}{}
+			name = path.Dir(name)
+		}
+	}
+	dirs := make([]string, 0, len(seen))
+	for name := range seen {
+		dirs = append(dirs, name)
+	}
+	sort.Strings(dirs)
+	return dirs
 }
 
 func buildDeb(control, data []byte) []byte {
